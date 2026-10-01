@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>360° Virtual Tour</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', cursive, sans-serif;
+    }
+
+    .a-enter-vr-button {
+  display: block !important;
+}
+
+    /* UPDATED CONTROL BAR (MODIFIED) - Frosted glass effect with fullscreen support */
+    .control-info {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #000;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 16px;
+      z-index: 9999;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    /* FULLSCREEN SUPPORT (ADDED) - Control bar visible in fullscreen */
+    body:fullscreen .control-info,
+    body:-webkit-full-screen .control-info,
+    body:-moz-full-screen .control-info,
+    body:-ms-fullscreen .control-info,
+    a-scene:fullscreen ~ .control-info,
+    a-scene:-webkit-full-screen ~ .control-info,
+    a-scene:-moz-full-screen ~ .control-info,
+    a-scene:-ms-fullscreen ~ .control-info {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 50% !important;
+      transform: translateX(-50%) scale(3) !important;
+      transform-origin: bottom center;
+      z-index: 999999 !important;
+      display: flex !important;
+    }
+
+    /* CONTROL BAR ITEMS (MODIFIED) - Single line layout */
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      color: #000;
+      white-space: nowrap;
+    }
+
+    .control-separator {
+      width: 1px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      flex-shrink: 0;
+    }
+
+    /* CONTROL BUTTONS (MODIFIED) - Icon buttons */
+    .control-btn {
+      pointer-events: auto;
+      background: rgba(0, 0, 0, 0.08);
+      border: 2px solid rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      font-weight: 800;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      line-height: 1;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 0, 0, 0.15);
+      transform: scale(1.05);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* SVG ICONS (ADDED) - Universal cross-platform icons */
+    .icon-svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .icon-svg-small {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* Button Color Customization */
+    #zoomInBtn {
+      background: rgba(0, 255, 0, 0.3);
+      border-color: rgba(0, 200, 0, 0.6);
+    }
+
+    #zoomInBtn:hover {
+      background: rgba(0, 255, 0, 0.5);
+    }
+
+    #zoomOutBtn {
+      background: rgba(255, 165, 0, 0.3);
+      border-color: rgba(255, 140, 0, 0.6);
+    }
+
+    #zoomOutBtn:hover {
+      background: rgba(255, 165, 0, 0.5);
+    }
+
+    #zoomResetBtn {
+      background: rgba(0, 0, 255, 0.3);
+      border-color: rgba(0, 0, 200, 0.6);
+      color: #fff;
+    }
+
+    #zoomResetBtn:hover {
+      background: rgba(0, 0, 255, 0.5);
+    }
+
+    #flipBoardBtn {
+      background: rgba(128, 0, 128, 0.3);
+      border-color: rgba(100, 0, 100, 0.6);
+    }
+
+    #flipBoardBtn:hover {
+      background: rgba(128, 0, 128, 0.5);
+    }
+
+    #fullscreenBtn {
+      background: rgba(255, 255, 0, 0.3);
+      border-color: rgba(200, 200, 0, 0.6);
+    }
+
+    #fullscreenBtn:hover {
+      background: rgba(255, 255, 0, 0.5);
+    }
+
+    #soundBtn {
+      background: rgba(0, 255, 0, 0.3);
+      border-color: rgba(0, 200, 0, 0.6);
+    }
+
+    #soundBtn:hover {
+      background: rgba(0, 255, 0, 0.5);
+    }
+
+    #soundBtn.muted {
+      background: rgba(255, 0, 0, 0.3);
+      border-color: rgba(200, 0, 0, 0.6);
+    }
+
+    #soundBtn.muted:hover {
+      background: rgba(255, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ✅ FIX: REGISTER keyboard-look BEFORE <a-scene> -->
+<script>
+AFRAME.registerComponent('keyboard-look', {
+  schema: {
+    speed: { type: 'number', default: 0.03 }
+  },
+
+  init: function () {
+    this.keys = {};
+    this.lookControls = null;
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key.startsWith('Arrow')) {
+        e.preventDefault();
+        this.keys[e.key] = true;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key.startsWith('Arrow')) {
+        this.keys[e.key] = false;
+      }
+    });
+  },
+
+  tick: function () {
+    if (!this.lookControls) {
+      this.lookControls = this.el.components['look-controls'];
+      if (!this.lookControls) return;
+    }
+
+    const yaw = this.lookControls.yawObject.rotation;
+    const pitch = this.lookControls.pitchObject.rotation;
+    const speed = this.data.speed;
+
+    if (this.keys['ArrowLeft'])  yaw.y += speed;
+    if (this.keys['ArrowRight']) yaw.y -= speed;
+    if (this.keys['ArrowUp'])    pitch.x += speed;
+    if (this.keys['ArrowDown'])  pitch.x -= speed;
+
+    pitch.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch.x));
+  }
+});
+
+// ✅ FLIP-BOARD COMPONENT
+AFRAME.registerComponent('flip-board', {
+  schema: {
+    frontSrc: { type: 'string', default: '' },
+    backSrc: { type: 'string', default: '' },
+    width: { type: 'number', default: 1 },
+    height: { type: 'number', default: 1 },
+    duration: { type: 'number', default: 800 }
+  },
+
+  init: function () {
+    console.log('🎴 Flip-board component initialized');
+    this.isFlipped = false;
+    this.isAnimating = false;
+
+    // Get base rotation from element (set by SceneManager)
+    const baseRotation = this.el.getAttribute('rotation');
+    this.baseRotationY = baseRotation ? baseRotation.y : 0;
+    this.currentRotation = this.baseRotationY;
+    console.log('🎴 Base rotation Y:', this.baseRotationY);
+
+    // Create front plane
+    const frontPlane = document.createElement('a-plane');
+    frontPlane.setAttribute('src', this.data.frontSrc);
+    frontPlane.setAttribute('width', this.data.width);
+    frontPlane.setAttribute('height', this.data.height);
+    frontPlane.setAttribute('material', 'shader: flat; transparent: true');
+    frontPlane.setAttribute('rotation', '0 0 0');
+    frontPlane.classList.add('clickable'); // Make clickable for raycaster
+    this.el.appendChild(frontPlane);
+    this.frontPlane = frontPlane;
+
+    // Create back plane (rotated 180° so it faces opposite direction)
+    const backPlane = document.createElement('a-plane');
+    backPlane.setAttribute('src', this.data.backSrc);
+    backPlane.setAttribute('width', this.data.width);
+    backPlane.setAttribute('height', this.data.height);
+    backPlane.setAttribute('material', 'shader: flat; transparent: true');
+    backPlane.setAttribute('rotation', '0 180 0');
+    backPlane.classList.add('clickable'); // Make clickable for raycaster
+    this.el.appendChild(backPlane);
+    this.backPlane = backPlane;
+
+    // Click handler on both planes (since click might not bubble from child to parent)
+    const clickHandler = () => {
+      if (this.isAnimating) return;
+      this.flip();
+    };
+
+    frontPlane.addEventListener('click', clickHandler);
+    backPlane.addEventListener('click', clickHandler);
+    this.el.addEventListener('click', clickHandler);
+
+    console.log('🎴 Click handlers attached to front plane, back plane, and container');
+  },
+
+  flip: function () {
+    console.log('🔄 Flip triggered!');
+    this.isAnimating = true;
+    this.isFlipped = !this.isFlipped;
+
+    // Rotate container 180° to reveal the other side
+    this.currentRotation += 180;
+    console.log('🔄 Rotating to:', this.currentRotation);
+
+    this.el.setAttribute('animation', {
+      property: 'rotation.y',
+      to: this.currentRotation,
+      dur: this.data.duration,
+      easing: 'easeInOutCubic'
+    });
+
+    // Reset animation state
+    setTimeout(() => {
+      this.isAnimating = false;
+      this.el.removeAttribute('animation');
+    }, this.data.duration);
+  }
+});
+</script>
+
+<a-scene
+  cursor="rayOrigin: mouse"
+  vr-mode-ui="enabled: true"
+  xr-mode-ui="enabled: true"
+  webxr="optionalFeatures: local-floor, bounded-floor"
+>
+
+  <!-- ✅ ALL YOUR ASSETS — UNCHANGED -->
+  <a-assets>
+    <img id="info-houselayout" src="Assets/images/infoboards/houselayout.png">
+
+    <img id="info-kawas-front" src="Assets/images/infoboards/kawas-front.png">
+    <img id="info-kawas-back" src="Assets/images/infoboards/kawas-back.png">
+
+    <img id="info-olod-front" src="Assets/images/infoboards/olod-front.png">
+    <img id="info-olod-back" src="Assets/images/infoboards/olod-back.png">
+
+    <img id="info-soliu-front" src="Assets/images/infoboards/soliu-front.png">
+    <img id="info-soliu-back" src="Assets/images/infoboards/soliu-back.png">
+
+    <img id="info-soriba-front" src="Assets/images/infoboards/soriba-front.png">
+    <img id="info-soriba-back" src="Assets/images/infoboards/soriba-back.png">
+
+    <img id="info-tilud-front" src="Assets/images/infoboards/tilud-front.png">
+    <img id="info-tilud-back" src="Assets/images/infoboards/tilud-back.png">
+
+    <img id="nadir-patch" src="Assets/images/tgkdsn-patch360.jpg">
+
+    <audio id="bgMusic" src="Assets/audio/background.mp3" loop></audio>
+    <audio id="welcomeBM" src="Assets/audio/welcome-bm.mp3"></audio>
+    <audio id="welcomeEN" src="Assets/audio/welcome-eng.mp3"></audio>
+
+  </a-assets>
+
+  <!-- Camera (FIX: Explicit FOV for consistent zoom reset) -->
+  <a-camera
+    id="camera"
+    camera="fov: 80"
+    position="0 0 0"
+    wasd-controls="enabled: false"
+    look-controls="enabled: true"
+    keyboard-look>
+    <a-cursor
+      color="#39FF14"
+raycaster="objects: .clickable"
+      material="shader: flat">
+    </a-cursor>
+  </a-camera>
+
+  <a-entity id="hotspotContainer"></a-entity>
+
+  <a-entity id="scene2QuizContainer">
+
+    <!-- Quiz Button (visible only in Scene 2) -->
+    <a-image
+      id="scene2QuizButton"
+      src="Assets/images/quiz-icon.png"
+      width="1.2"
+      height="1.2"
+      position="5.0 0.4 -2"
+      rotation="0 -10 0"
+      material="transparent: true; alphaTest: 0.5; side: double"
+      visible="false"
+      class="clickable">
+    </a-image>
+
+    <!-- Quiz Card (same position/rotation as Scene 2 infoboard) -->
+    <a-entity
+      id="scene2QuizCard"
+      position="2.3 0.4 -3"
+      rotation="0 -10 0"
+      visible="false">
+
+      <!-- Background -->
+      <a-plane
+        width="5.2"
+        height="3.25"
+        color="#2f5d1e"
+        material="shader: flat">
+      </a-plane>
+
+      <!-- Question Title (BM) -->
+      <a-text
+        value="Mengapa alat seperti Dangol dan Pongorob digantung?"
+        align="center"
+        color="#FFD700"
+        width="5.0"
+        position="0 1.35 0.01"
+        wrap-count="50">
+      </a-text>
+
+      <!-- Question Title (EN) -->
+      <a-text
+        value="Why are tools like Dangol and Pongorob hung?"
+        align="center"
+        color="#FFD700"
+        width="4.0"
+        position="0 1.05 0.01"
+        wrap-count="45">
+      </a-text>
+
+      <!-- Answer A -->
+      <a-plane
+        id="scene2AnswerA"
+        width="4.8"
+        height="0.5"
+        position="0 0.5 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="A. Supaya nampak cantik\n   So that they look nice"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer B (CORRECT) -->
+      <a-plane
+        id="scene2AnswerB"
+        width="4.8"
+        height="0.5"
+        position="0 -0.1 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="B. Supaya mudah diambil dan selamat\n   So they are easy to take and safe"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer C -->
+      <a-plane
+        id="scene2AnswerC"
+        width="4.8"
+        height="0.5"
+        position="0 -0.7 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="C. Untuk permainan kanak-kanak\n   For children's play"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer D -->
+      <a-plane
+        id="scene2AnswerD"
+        width="4.8"
+        height="0.5"
+        position="0 -1.3 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="D. Untuk hiasan sahaja\n   For decoration only"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+    </a-entity>
+
+  </a-entity>
+
+  <a-entity id="scene4QuizContainer">
+
+    <!-- Quiz Button (visible only in Scene 4) -->
+    <a-image
+      id="scene4QuizButton"
+      src="Assets/images/quiz-icon.png"
+      width="1.2"
+      height="1.2"
+      position="-2.0 0.4 1.8"
+      rotation="0 90 0"
+      material="transparent: true; alphaTest: 0.5; side: double"
+      visible="false"
+      class="clickable">
+    </a-image>
+
+    <!-- Quiz Card (same position/rotation as Scene 4 infoboard) -->
+    <a-entity
+      id="scene4QuizCard"
+      position="-3.0 0.4 -1.0"
+      rotation="0 90 0"
+      visible="false">
+
+      <!-- Background -->
+      <a-plane
+        width="5.2"
+        height="3.25"
+        color="#2f5d1e"
+        material="shader: flat">
+      </a-plane>
+
+      <!-- Question Title (BM) -->
+      <a-text
+        value="Apakah tujuan utama upacara Magavau?"
+        align="center"
+        color="#FFD700"
+        width="5.0"
+        position="0 1.35 0.01"
+        wrap-count="50">
+      </a-text>
+
+      <!-- Question Title (EN) -->
+      <a-text
+        value="What is the main purpose of the Magavau ritual?"
+        align="center"
+        color="#FFD700"
+        width="4.0"
+        position="0 1.05 0.01"
+        wrap-count="45">
+      </a-text>
+
+      <!-- Answer A -->
+      <a-plane
+        id="scene4AnswerA"
+        width="4.8"
+        height="0.5"
+        position="0 0.5 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="A. Menyambut tetamu\n   Welcoming guests"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer B (CORRECT) -->
+      <a-plane
+        id="scene4AnswerB"
+        width="4.8"
+        height="0.5"
+        position="0 -0.1 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="B. Memanggil semula semangat padi\n   Calling back the rice spirit"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer C -->
+      <a-plane
+        id="scene4AnswerC"
+        width="4.8"
+        height="0.5"
+        position="0 -0.7 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="C. Menyimpan hasil tuaian\n   Storing harvested crops"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer D -->
+      <a-plane
+        id="scene4AnswerD"
+        width="4.8"
+        height="0.5"
+        position="0 -1.3 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="D. Menyediakan makanan\n   Preparing food"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+    </a-entity>
+
+  </a-entity>
+
+  <a-entity id="scene11QuizContainer">
+
+    <!-- Quiz Button (visible only in Scene 11) -->
+    <a-image
+      id="scene11QuizButton"
+      src="Assets/images/quiz-icon.png"
+      width="1.2"
+      height="1.2"
+      position="1.9 0.4 -2.0"
+      rotation="0 5 0"
+      material="transparent: true; alphaTest: 0.5; side: double"
+      visible="false"
+      class="clickable">
+    </a-image>
+
+    <!-- Quiz Card (same position/rotation as Scene 11 infoboard) -->
+    <a-entity
+      id="scene11QuizCard"
+      position="-0.6 0.4 -3"
+      rotation="0 5 0"
+      visible="false">
+
+      <!-- Background -->
+      <a-plane
+        width="5.2"
+        height="3.25"
+        color="#2f5d1e"
+        material="shader: flat">
+      </a-plane>
+
+      <!-- Question Title (BM) -->
+      <a-text
+        value="Siapakah 'Taki' dan 'Todu' dalam keluarga Dusun?"
+        align="center"
+        color="#FFD700"
+        width="5.0"
+        position="0 1.35 0.01"
+        wrap-count="50">
+      </a-text>
+
+      <!-- Question Title (EN) -->
+      <a-text
+        value="Who are 'Taki' and 'Todu' in a Dusun family?"
+        align="center"
+        color="#FFD700"
+        width="4.0"
+        position="0 1.05 0.01"
+        wrap-count="45">
+      </a-text>
+
+      <!-- Answer A -->
+      <a-plane
+        id="scene11AnswerA"
+        width="4.8"
+        height="0.5"
+        position="0 0.5 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="A. Ayah dan ibu\n   Father and mother"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer B (CORRECT) -->
+      <a-plane
+        id="scene11AnswerB"
+        width="4.8"
+        height="0.5"
+        position="0 -0.1 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="B. Datuk dan nenek\n   Grandfather and grandmother"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer C -->
+      <a-plane
+        id="scene11AnswerC"
+        width="4.8"
+        height="0.5"
+        position="0 -0.7 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="C. Abang dan kakak\n   Older brother and older sister"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+      <!-- Answer D -->
+      <a-plane
+        id="scene11AnswerD"
+        width="4.8"
+        height="0.5"
+        position="0 -1.3 0.01"
+        color="#1a3d11"
+        material="shader: flat"
+        class="clickable quiz-answer">
+        <a-text
+          value="D. Adik lelaki dan adik perempuan\n   Younger brother and younger sister"
+          align="left"
+          color="#FFFFFF"
+          width="4.3"
+          position="-2.3 0 0.01"
+          wrap-count="50">
+        </a-text>
+      </a-plane>
+
+    </a-entity>
+  </a-entity>
+
+</a-scene>
+
+<!-- FIX: Control bar placed AFTER <a-scene> for fullscreen support -->
+<!-- UPDATED CONTROL BAR (MODIFIED) - Universal SVG icons for cross-platform compatibility -->
+<div class="control-info">
+  <!-- Look Controls -->
+  <div class="control-item">
+    <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6h3v5H6V8L2 12l4 4v-3h5v5H8l4 4 4-4h-3v-5h5v3l4-4-4-4v3h-5V6h3z"/>
+    </svg>
+    <span>Look</span>
+  </div>
+
+  <div class="control-separator"></div>
+
+  <!-- Mouse Drag -->
+  <div class="control-item">
+    <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93zM4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z"/>
+    </svg>
+    <span>Drag</span>
+  </div>
+
+  <div class="control-separator"></div>
+
+  <!-- Zoom Controls (ADDED) -->
+  <div class="control-item">
+    <button id="zoomInBtn" class="control-btn" title="Zoom In (+)">
+      <svg class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+      </svg>
+    </button>
+    <button id="zoomOutBtn" class="control-btn" title="Zoom Out (-)">
+      <svg class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 13H5v-2h14v2z"/>
+      </svg>
+    </button>
+    <button id="zoomResetBtn" class="control-btn" title="Reset Zoom (0)">0</button>
+    <span>Zoom</span>
+  </div>
+
+  <div class="control-separator"></div>
+
+  <!-- Flip Board Control (ADDED) -->
+  <div class="control-item">
+    <button id="flipBoardBtn" class="control-btn" title="Flip Info Board">
+      <svg class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/>
+      </svg>
+    </button>
+    <span>Flip Board</span>
+  </div>
+
+  <div class="control-separator"></div>
+
+  <!-- Sound Control (ADDED) -->
+  <div class="control-item">
+    <button id="soundBtn" class="control-btn" title="Toggle Sound">
+      <svg id="soundIconOn" class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+      <svg id="soundIconOff" class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="control-separator"></div>
+
+  <!-- Fullscreen Control (ADDED) -->
+  <div class="control-item">
+    <button id="fullscreenBtn" class="control-btn" title="Toggle Fullscreen">
+      <svg id="fullscreenIconEnter" class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+      </svg>
+      <svg id="fullscreenIconExit" class="icon-svg-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- Your existing logic -->
+<script src="Assets/js/SceneManager.js"></script>
+
+<!-- ✅ SCENE 2 QUIZ LOGIC - ISOLATED, DOES NOT MODIFY SCENEMANAGER -->
+<script>
+(function() {
+  'use strict';
+
+  let quizButton, quizCard;
+  let answerA, answerB, answerC, answerD;
+  let quizAnswered = false;
+
+  // Wait for scene to load
+  document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+      initQuizScene2();
+    } else {
+      scene.addEventListener('loaded', initQuizScene2);
+    }
+  });
+
+  function initQuizScene2() {
+    // Get quiz elements
+    quizButton = document.getElementById('scene2QuizButton');
+    quizCard = document.getElementById('scene2QuizCard');
+    answerA = document.getElementById('scene2AnswerA');
+    answerB = document.getElementById('scene2AnswerB');
+    answerC = document.getElementById('scene2AnswerC');
+    answerD = document.getElementById('scene2AnswerD');
+
+    console.log('📝 Quiz initialized:', { quizButton, quizCard, answerA, answerB, answerC, answerD });
+
+    // Quiz button click - open quiz
+    if (quizButton) {
+      quizButton.addEventListener('click', openQuizScene2);
+    }
+
+    // Answer clicks
+    if (answerA) answerA.addEventListener('click', () => handleAnswerScene2('A', false));
+    if (answerB) answerB.addEventListener('click', () => handleAnswerScene2('B', true));
+    if (answerC) answerC.addEventListener('click', () => handleAnswerScene2('C', false));
+    if (answerD) answerD.addEventListener('click', () => handleAnswerScene2('D', false));
+  }
+
+  function openQuizScene2() {
+    // Hide infoboard - always query fresh
+const infoboard = document.getElementById('scene2Infoboard');
+if (infoboard) {
+  const planes = infoboard.querySelectorAll('a-plane');
+  planes.forEach(plane => {
+    plane.setAttribute('visible', 'false');
+  });
+  console.log('📝 Infoboard planes hidden');
+}
+
+
+    // Hide quiz button
+    if (quizButton) {
+      quizButton.setAttribute('visible', 'false');
+    }
+
+if (quizCard) {
+  quizCard.setAttribute('visible', 'true');
+
+  // 🔄 FULL RESET answers every time quiz opens
+  quizAnswered = false;
+
+  document.querySelectorAll('.quiz-answer').forEach(el => {
+    el.setAttribute('color', '#1a3d11');
+    el.removeAttribute('material');
+    el.removeAttribute('animation__border');
+  });
+}
+
+    console.log('📝 Quiz opened for Scene 2');
+  }
+
+function closeQuizScene2() {
+if (quizCard) {
+  quizCard.setAttribute('visible', 'false');
+
+  // 🔥 CRITICAL: stop blocking clicks
+  quizCard.removeAttribute('raycaster');
+}
+
+
+  const infoboard = document.getElementById('scene2Infoboard');
+  if (infoboard) {
+    const planes = infoboard.querySelectorAll('a-plane');
+    planes.forEach(plane => {
+      plane.setAttribute('visible', 'true');
+    });
+
+    // 🔄 RESET flip-board state
+    const flipComp = infoboard.components && infoboard.components['flip-board'];
+    if (flipComp) {
+      flipComp.isAnimating = false;
+      flipComp.isFlipped = false;
+      flipComp.currentRotation = flipComp.baseRotationY;
+
+      infoboard.setAttribute('rotation', {
+        x: 0,
+        y: flipComp.baseRotationY,
+        z: 0
+      });
+    }
+  }
+
+  if (quizButton && currentSceneId === 'scene2') {
+    quizButton.setAttribute('visible', 'true');
+  }
+
+  resetAnswerColors();
+  quizAnswered = false;
+}
+
+function sparkleEffect(el) {
+  if (!el) return;
+
+  el.setAttribute('animation__pop', {
+    property: 'scale',
+    from: '1 1 1',
+    to: '1.06 1.06 1',
+    dur: 180,
+    easing: 'easeOutQuad'
+  });
+
+  el.setAttribute('animation__glow', {
+    property: 'material.color',
+    from: '#228B22',
+    to: '#7CFC00',
+    dur: 250,
+    dir: 'alternate',
+    loop: 2
+  });
+
+  setTimeout(() => {
+    el.setAttribute('scale', '1 1 1');
+    el.removeAttribute('animation__pop');
+    el.removeAttribute('animation__glow');
+  }, 500);
+}
+
+// 🔒 Lock all answers immediately
+document.querySelectorAll('.quiz-answer').forEach(el => {
+  el.classList.remove('clickable');
+});
+
+  function handleAnswerScene2(answer, isCorrect) {
+    const selectedElement = document.getElementById(`scene2Answer${answer}`);
+
+if (isCorrect) {
+  quizAnswered = true; // ✅ mark as answered
+
+  selectedElement.setAttribute('animation__border', {
+    property: 'material.emissive',
+    from: '#000000',
+    to: '#7CFC00',
+    dur: 300,
+    dir: 'alternate',
+    loop: 2
+  });
+
+  setTimeout(closeQuizScene2, 1500);
+}
+
+ else {
+      // Wrong answer - red feedback
+      selectedElement.setAttribute('color', '#8B0000');
+      console.log('❌ Wrong answer');
+
+      // Reset color after 1 second, allow retry
+      setTimeout(() => {
+        selectedElement.setAttribute('color', '#1a3d11');
+      }, 1000);
+    }
+  }
+
+  function resetAnswerColors() {
+    const defaultColor = '#1a3d11';
+    if (answerA) answerA.setAttribute('color', defaultColor);
+    if (answerB) answerB.setAttribute('color', defaultColor);
+    if (answerC) answerC.setAttribute('color', defaultColor);
+    if (answerD) answerD.setAttribute('color', defaultColor);
+  }
+
+})();
+</script>
+
+<!-- ✅ SCENE 4 QUIZ LOGIC - ISOLATED, DOES NOT MODIFY SCENEMANAGER -->
+<script>
+(function() {
+  'use strict';
+
+  let quizButton, quizCard;
+  let answerA, answerB, answerC, answerD;
+  let quizAnswered = false;
+
+  // Wait for scene to load
+  document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+      initQuizScene4();
+    } else {
+      scene.addEventListener('loaded', initQuizScene4);
+    }
+  });
+
+  function initQuizScene4() {
+    // Get quiz elements
+    quizButton = document.getElementById('scene4QuizButton');
+    quizCard = document.getElementById('scene4QuizCard');
+    answerA = document.getElementById('scene4AnswerA');
+    answerB = document.getElementById('scene4AnswerB');
+    answerC = document.getElementById('scene4AnswerC');
+    answerD = document.getElementById('scene4AnswerD');
+
+    console.log('📝 Quiz initialized:', { quizButton, quizCard, answerA, answerB, answerC, answerD });
+
+    // Quiz button click - open quiz
+    if (quizButton) {
+      quizButton.addEventListener('click', openQuizScene4);
+    }
+
+    // Answer clicks
+    if (answerA) answerA.addEventListener('click', () => handleAnswerScene4('A', false));
+    if (answerB) answerB.addEventListener('click', () => handleAnswerScene4('B', true));
+    if (answerC) answerC.addEventListener('click', () => handleAnswerScene4('C', false));
+    if (answerD) answerD.addEventListener('click', () => handleAnswerScene4('D', false));
+  }
+
+  function openQuizScene4() {
+    // Hide infoboard - always query fresh
+    const infoboard = document.getElementById('scene4Infoboard');
+    if (infoboard) {
+      const planes = infoboard.querySelectorAll('a-plane');
+      planes.forEach(plane => {
+        plane.setAttribute('visible', 'false');
+      });
+      console.log('📝 Infoboard planes hidden');
+    }
+
+    // Hide quiz button
+    if (quizButton) {
+      quizButton.setAttribute('visible', 'false');
+    }
+
+    if (quizCard) {
+      quizCard.setAttribute('visible', 'true');
+
+      // 🔄 FULL RESET answers every time quiz opens
+      quizAnswered = false;
+
+      document.querySelectorAll('.quiz-answer').forEach(el => {
+        el.setAttribute('color', '#1a3d11');
+        el.removeAttribute('material');
+        el.removeAttribute('animation__border');
+      });
+    }
+
+    console.log('📝 Quiz opened for Scene 4');
+  }
+
+  function closeQuizScene4() {
+    if (quizCard) {
+      quizCard.setAttribute('visible', 'false');
+      quizCard.removeAttribute('raycaster');
+    }
+
+    const infoboard = document.getElementById('scene4Infoboard');
+    if (infoboard) {
+      const planes = infoboard.querySelectorAll('a-plane');
+      planes.forEach(plane => {
+        plane.setAttribute('visible', 'true');
+      });
+
+      // 🔄 RESET flip-board state
+      const flipComp = infoboard.components && infoboard.components['flip-board'];
+      if (flipComp) {
+        flipComp.isAnimating = false;
+        flipComp.isFlipped = false;
+        flipComp.currentRotation = flipComp.baseRotationY;
+
+        infoboard.setAttribute('rotation', {
+          x: 0,
+          y: flipComp.baseRotationY,
+          z: 0
+        });
+      }
+    }
+
+    if (quizButton && currentSceneId === 'scene4') {
+      quizButton.setAttribute('visible', 'true');
+    }
+
+    resetAnswerColors();
+    quizAnswered = false;
+  }
+
+  function handleAnswerScene4(answer, isCorrect) {
+    const selectedElement = document.getElementById(`scene4Answer${answer}`);
+
+    if (isCorrect) {
+      quizAnswered = true;
+
+      selectedElement.setAttribute('animation__border', {
+        property: 'material.emissive',
+        from: '#000000',
+        to: '#7CFC00',
+        dur: 300,
+        dir: 'alternate',
+        loop: 2
+      });
+
+      setTimeout(closeQuizScene4, 1500);
+    } else {
+      // Wrong answer - red feedback
+      selectedElement.setAttribute('color', '#8B0000');
+      console.log('❌ Wrong answer');
+
+      // Reset color after 1 second, allow retry
+      setTimeout(() => {
+        selectedElement.setAttribute('color', '#1a3d11');
+      }, 1000);
+    }
+  }
+
+  function resetAnswerColors() {
+    const defaultColor = '#1a3d11';
+    if (answerA) answerA.setAttribute('color', defaultColor);
+    if (answerB) answerB.setAttribute('color', defaultColor);
+    if (answerC) answerC.setAttribute('color', defaultColor);
+    if (answerD) answerD.setAttribute('color', defaultColor);
+  }
+
+})();
+</script>
+
+<!-- ✅ SCENE 11 QUIZ LOGIC - ISOLATED, DOES NOT MODIFY SCENEMANAGER -->
+<script>
+(function() {
+  'use strict';
+
+  let quizButton, quizCard;
+  let answerA, answerB, answerC, answerD;
+  let quizAnswered = false;
+
+  // Wait for scene to load
+  document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+      initQuizScene11();
+    } else {
+      scene.addEventListener('loaded', initQuizScene11);
+    }
+  });
+
+  function initQuizScene11() {
+    // Get quiz elements
+    quizButton = document.getElementById('scene11QuizButton');
+    quizCard = document.getElementById('scene11QuizCard');
+    answerA = document.getElementById('scene11AnswerA');
+    answerB = document.getElementById('scene11AnswerB');
+    answerC = document.getElementById('scene11AnswerC');
+    answerD = document.getElementById('scene11AnswerD');
+
+    console.log('📝 Quiz initialized:', { quizButton, quizCard, answerA, answerB, answerC, answerD });
+
+    // Quiz button click - open quiz
+    if (quizButton) {
+      quizButton.addEventListener('click', openQuizScene11);
+    }
+
+    // Answer clicks
+    if (answerA) answerA.addEventListener('click', () => handleAnswerScene11('A', false));
+    if (answerB) answerB.addEventListener('click', () => handleAnswerScene11('B', true));
+    if (answerC) answerC.addEventListener('click', () => handleAnswerScene11('C', false));
+    if (answerD) answerD.addEventListener('click', () => handleAnswerScene11('D', false));
+  }
+
+  function openQuizScene11() {
+    // Hide infoboard - always query fresh
+    const infoboard = document.getElementById('scene11Infoboard');
+    if (infoboard) {
+      const planes = infoboard.querySelectorAll('a-plane');
+      planes.forEach(plane => {
+        plane.setAttribute('visible', 'false');
+      });
+      console.log('📝 Infoboard planes hidden');
+    }
+
+    // Hide quiz button
+    if (quizButton) {
+      quizButton.setAttribute('visible', 'false');
+    }
+
+    if (quizCard) {
+      quizCard.setAttribute('visible', 'true');
+
+      // 🔄 FULL RESET answers every time quiz opens
+      quizAnswered = false;
+
+      document.querySelectorAll('.quiz-answer').forEach(el => {
+        el.setAttribute('color', '#1a3d11');
+        el.removeAttribute('material');
+        el.removeAttribute('animation__border');
+      });
+    }
+
+    console.log('📝 Quiz opened for Scene 11');
+  }
+
+  function closeQuizScene11() {
+    if (quizCard) {
+      quizCard.setAttribute('visible', 'false');
+      quizCard.removeAttribute('raycaster');
+    }
+
+    const infoboard = document.getElementById('scene11Infoboard');
+    if (infoboard) {
+      const planes = infoboard.querySelectorAll('a-plane');
+      planes.forEach(plane => {
+        plane.setAttribute('visible', 'true');
+      });
+
+      // 🔄 RESET flip-board state
+      const flipComp = infoboard.components && infoboard.components['flip-board'];
+      if (flipComp) {
+        flipComp.isAnimating = false;
+        flipComp.isFlipped = false;
+        flipComp.currentRotation = flipComp.baseRotationY;
+
+        infoboard.setAttribute('rotation', {
+          x: 0,
+          y: flipComp.baseRotationY,
+          z: 0
+        });
+      }
+    }
+
+    if (quizButton && currentSceneId === 'scene11') {
+      quizButton.setAttribute('visible', 'true');
+    }
+
+    resetAnswerColors();
+    quizAnswered = false;
+  }
+
+  function handleAnswerScene11(answer, isCorrect) {
+    const selectedElement = document.getElementById(`scene11Answer${answer}`);
+
+    if (isCorrect) {
+      quizAnswered = true;
+
+      selectedElement.setAttribute('animation__border', {
+        property: 'material.emissive',
+        from: '#000000',
+        to: '#7CFC00',
+        dur: 300,
+        dir: 'alternate',
+        loop: 2
+      });
+
+      setTimeout(closeQuizScene11, 1500);
+    } else {
+      // Wrong answer - red feedback
+      selectedElement.setAttribute('color', '#8B0000');
+      console.log('❌ Wrong answer');
+
+      // Reset color after 1 second, allow retry
+      setTimeout(() => {
+        selectedElement.setAttribute('color', '#1a3d11');
+      }, 1000);
+    }
+  }
+
+  function resetAnswerColors() {
+    const defaultColor = '#1a3d11';
+    if (answerA) answerA.setAttribute('color', defaultColor);
+    if (answerB) answerB.setAttribute('color', defaultColor);
+    if (answerC) answerC.setAttribute('color', defaultColor);
+    if (answerD) answerD.setAttribute('color', defaultColor);
+  }
+
+})();
+</script>
+
+<!-- ✅ GLOBAL QUIZ SCENE WATCHER - Single interval to manage all quiz visibility -->
+<script>
+(function() {
+  'use strict';
+
+  // Wait for scene to load before starting watcher
+  document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+      startGlobalWatcher();
+    } else {
+      scene.addEventListener('loaded', startGlobalWatcher);
+    }
+  });
+
+  function startGlobalWatcher() {
+    console.log('🔄 Starting global quiz scene watcher');
+
+    // Single interval manages all quiz visibility
+    setInterval(() => {
+      const quizScenes = [
+        { id: 'scene2', button: 'scene2QuizButton', card: 'scene2QuizCard' },
+        { id: 'scene4', button: 'scene4QuizButton', card: 'scene4QuizCard' },
+        { id: 'scene11', button: 'scene11QuizButton', card: 'scene11QuizCard' }
+      ];
+
+      if (typeof currentSceneId === 'undefined') return;
+
+      quizScenes.forEach(quiz => {
+        const btn = document.getElementById(quiz.button);
+        const card = document.getElementById(quiz.card);
+
+        if (!btn || !card) return;
+
+        if (currentSceneId === quiz.id) {
+          // Show button only if quiz card is not visible
+          if (!card.getAttribute('visible')) {
+            btn.setAttribute('visible', 'true');
+          }
+        } else {
+          // Hide everything when not in this scene
+          btn.setAttribute('visible', 'false');
+          card.setAttribute('visible', 'false');
+          card.removeAttribute('raycaster');
+        }
+      });
+    }, 300); // 300ms is faster and more responsive than 500ms
+  }
+})();
+</script>
+
+<script>
+(function () {
+  let started = false;
+
+  document.addEventListener('click', function () {
+    if (started) return;
+
+    const bg = document.getElementById('bgMusic');
+    const bm = document.getElementById('welcomeBM');
+    const en = document.getElementById('welcomeEN');
+
+    if (!bg || !bm || !en) return;
+
+    // 🎵 Start background music (loop forever)
+    bg.volume = 0.3;
+    bg.loop = true;
+    bg.play();
+
+    // 🇲🇾 Play BM after 5 seconds
+    setTimeout(() => {
+      bm.volume = 1.0;
+      bm.play();
+    }, 5000);
+
+    // 🇬🇧 When BM ends, play English
+    bm.addEventListener('ended', () => {
+      en.volume = 1.0;
+      en.play();
+    });
+
+    started = true;
+  });
+})();
+</script>
+
+
+<!-- ========================================= -->
+<!-- ZOOM FEATURE (ADDED) -->
+<!-- ========================================= -->
+<script>
+// ZOOM FEATURE (ADDED) - FOV-based keyboard zoom
+// Exposed globally for button controls
+const ZoomControl = (function() {
+  'use strict';
+
+  const DEFAULT_FOV = 80;
+  const MIN_FOV = 40;
+  const MAX_FOV = 80;
+  const ZOOM_STEP = 5;
+
+  let camera;
+
+  // Wait for scene to load
+  document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+      initZoom();
+    } else {
+      scene.addEventListener('loaded', initZoom);
+    }
+  });
+
+  function initZoom() {
+    camera = document.getElementById('camera');
+    if (!camera) {
+      console.warn('ZOOM FEATURE: Camera element not found');
+      return;
+    }
+
+    console.log('🔍 ZOOM FEATURE: Initialized (+ to zoom in, - to zoom out, 0 to reset)');
+
+    // Add keyboard listener for zoom keys (does not override existing listeners)
+    window.addEventListener('keydown', handleZoomKeydown);
+  }
+
+  function handleZoomKeydown(e) {
+    if (!camera) return;
+
+    // ZOOM FEATURE (ADDED) - Handle zoom keys
+    if (e.key === '+' || e.key === '=') {
+      zoomIn();
+      e.preventDefault();
+    } else if (e.key === '-' || e.key === '_') {
+      zoomOut();
+      e.preventDefault();
+    } else if (e.key === '0') {
+      resetZoom();
+      e.preventDefault();
+    }
+  }
+
+  // ZOOM FEATURE (ADDED) - Exposed zoom functions
+  function zoomIn() {
+    if (!camera) return;
+    const currentFOV = camera.getAttribute('camera').fov || DEFAULT_FOV;
+    const newFOV = Math.max(MIN_FOV, currentFOV - ZOOM_STEP);
+    if (newFOV !== currentFOV) {
+      camera.setAttribute('camera', 'fov', newFOV);
+      console.log(`🔍 ZOOM IN: FOV changed to ${newFOV}`);
+    }
+  }
+
+  function zoomOut() {
+    if (!camera) return;
+    const currentFOV = camera.getAttribute('camera').fov || DEFAULT_FOV;
+    const newFOV = Math.min(MAX_FOV, currentFOV + ZOOM_STEP);
+    if (newFOV !== currentFOV) {
+      camera.setAttribute('camera', 'fov', newFOV);
+      console.log(`🔍 ZOOM OUT: FOV changed to ${newFOV}`);
+    }
+  }
+
+  function resetZoom() {
+    if (!camera) return;
+    camera.setAttribute('camera', 'fov', DEFAULT_FOV);
+    console.log(`🔍 ZOOM RESET: FOV reset to ${DEFAULT_FOV}`);
+  }
+
+  // Expose public API
+  return {
+    zoomIn: zoomIn,
+    zoomOut: zoomOut,
+    reset: resetZoom
+  };
+
+})();
+</script>
+<!-- ========================================= -->
+<!-- END ZOOM FEATURE (ADDED) -->
+<!-- ========================================= -->
+
+<!-- ========================================= -->
+<!-- CONTROL BAR BUTTON HANDLERS (ADDED) -->
+<!-- ========================================= -->
+<script>
+(function() {
+  'use strict';
+
+  let isMuted = false;
+
+  // Wait for DOM to load
+  document.addEventListener('DOMContentLoaded', function() {
+    initControlButtons();
+  });
+
+  function initControlButtons() {
+    // ZOOM BUTTONS (ADDED)
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const zoomResetBtn = document.getElementById('zoomResetBtn');
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (typeof ZoomControl !== 'undefined') {
+          ZoomControl.zoomIn();
+        }
+      });
+    }
+
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (typeof ZoomControl !== 'undefined') {
+          ZoomControl.zoomOut();
+        }
+      });
+    }
+
+    if (zoomResetBtn) {
+      zoomResetBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (typeof ZoomControl !== 'undefined') {
+          ZoomControl.reset();
+        }
+      });
+    }
+
+    // FLIP BOARD BUTTON (ADDED)
+    const flipBoardBtn = document.getElementById('flipBoardBtn');
+    if (flipBoardBtn) {
+      flipBoardBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        triggerFlipBoard();
+      });
+    }
+
+    // FULLSCREEN BUTTON (ADDED)
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleFullscreen();
+      });
+    }
+
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', updateFullscreenIcon);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+    document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+    document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
+
+    console.log('🎮 CONTROL BAR: Button handlers initialized');
+  }
+
+  // FLIP BOARD BUTTON HANDLER (FIX: Only flip visible boards)
+  function triggerFlipBoard() {
+    const scene = document.querySelector('a-scene');
+    if (!scene || !scene.hasLoaded) return;
+
+    // Find all flip-board entities
+    const flipBoards = document.querySelectorAll('[flip-board]');
+
+    // Find the first visible flip-board
+    for (let board of flipBoards) {
+      const isVisible = board.getAttribute('visible');
+
+      // Check if board is visible (visible by default in A-Frame, or explicitly true)
+      if (isVisible === null || isVisible === true || isVisible === 'true') {
+        const planes = board.querySelectorAll('a-plane');
+        let hasVisiblePlane = false;
+
+        planes.forEach(plane => {
+          const planeVisible = plane.getAttribute('visible');
+          // Planes are visible by default or explicitly set to true
+          if (planeVisible === null || planeVisible === true || planeVisible === 'true') {
+            hasVisiblePlane = true;
+          }
+        });
+
+        // Trigger flip if board has visible planes
+        if (hasVisiblePlane) {
+          const flipComponent = board.components['flip-board'];
+          if (flipComponent && typeof flipComponent.flip === 'function') {
+            flipComponent.flip();
+            console.log('🔄 FLIP BOARD: Triggered flip on visible board');
+            return;
+          }
+        }
+      }
+    }
+
+    console.log('🔄 FLIP BOARD: No visible flip-board found');
+  }
+
+
+
+function toggleFullscreen() {
+  const root = document.documentElement;
+
+  if (!isFullscreen()) {
+    // ENTER fullscreen (entire page, not a-scene)
+    if (root.requestFullscreen) {
+      root.requestFullscreen();
+    } else if (root.webkitRequestFullscreen) {
+      root.webkitRequestFullscreen();
+    } else if (root.mozRequestFullScreen) {
+      root.mozRequestFullScreen();
+    } else if (root.msRequestFullscreen) {
+      root.msRequestFullscreen();
+    }
+
+    console.log('📺 FULLSCREEN: Enter page fullscreen');
+  } else {
+    // EXIT fullscreen
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+
+    console.log('📺 FULLSCREEN: Exit fullscreen');
+  }
+}
+
+
+  // Check if currently in fullscreen
+  function isFullscreen() {
+    return !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+  }
+
+  // Update fullscreen icon based on state
+  function updateFullscreenIcon() {
+    const iconEnter = document.getElementById('fullscreenIconEnter');
+    const iconExit = document.getElementById('fullscreenIconExit');
+
+    if (isFullscreen()) {
+      // Show exit icon
+      if (iconEnter) iconEnter.style.display = 'none';
+      if (iconExit) iconExit.style.display = 'block';
+    } else {
+      // Show enter icon
+      if (iconEnter) iconEnter.style.display = 'block';
+      if (iconExit) iconExit.style.display = 'none';
+    }
+  }
+
+})();
+</script>
+<!-- ========================================= -->
+<!-- END CONTROL BAR BUTTON HANDLERS (ADDED) -->
+<!-- ========================================= -->
+
+<script>
+(function () {
+  let muted = false;
+
+  const bg = document.getElementById('bgMusic');
+  const bm = document.getElementById('welcomeBM');
+  const en = document.getElementById('welcomeEN');
+
+  const soundBtn = document.getElementById('soundBtn');
+  const iconOn = document.getElementById('soundIconOn');
+  const iconOff = document.getElementById('soundIconOff');
+
+  if (!soundBtn) return;
+
+  soundBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+
+    muted = !muted;
+
+    // 🔇 mute / 🔊 unmute
+    if (bg) bg.volume = muted ? 0 : 0.3;
+    if (bm) bm.volume = muted ? 0 : 1.0;
+    if (en) en.volume = muted ? 0 : 1.0;
+
+    // change icon
+    if (iconOn) iconOn.style.display = muted ? 'none' : 'block';
+    if (iconOff) iconOff.style.display = muted ? 'block' : 'none';
+
+    soundBtn.classList.toggle('muted', muted);
+  });
+})();
+</script>
+
+
+</body>
+</html>

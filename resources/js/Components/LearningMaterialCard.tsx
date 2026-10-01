@@ -1,0 +1,70 @@
+import { router } from '@inertiajs/react';
+import { useLanguage } from '@/Contexts/LanguageContext';
+
+interface LearningMaterialCardProps {
+    readonly id: number;
+    readonly title: string;
+    readonly description: string | null;
+    readonly category: string | null;
+    readonly flashcardCount: number;
+    readonly cover_image?: string | null;
+}
+
+const materialCardColor = 'bg-green-500';
+
+/*
+ * Card displaying a learning material with cover image
+ * Clicking leads to the flashcard learning experience
+ */
+export default function LearningMaterialCard({
+    id,
+    title,
+    description,
+    category,
+    flashcardCount,
+    cover_image,
+    onOpenPreview
+}: LearningMaterialCardProps & { onOpenPreview?: (materialId: number) => void }) {
+    const { t } = useLanguage();
+
+    /* Opens material preview modal or navigates to material page */
+    const handlePreview = () => {
+        if (onOpenPreview) {
+            onOpenPreview(id);
+        } else {
+            router.visit(`/learning-materials/${id}`);
+        }
+    };
+
+    return (
+        <div className={`${materialCardColor} rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300 text-white h-full flex flex-col justify-between`}>
+            {/* Outer Container with Padding for 0.5cm gap */}
+            <div className="p-5 flex-1 flex flex-col">
+                {/* Cover Image */}
+                <div className="w-full h-48 md:h-56 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center overflow-hidden rounded-md">
+                    {cover_image ? (
+                        <img
+                            src={cover_image}
+                            alt={title}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <svg className="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    )}
+                </div>
+            </div>
+
+            {/* Start Flashcard Button */}
+            <div className="p-5 pt-0">
+                <button
+                    onClick={handlePreview}
+                    className="w-full px-6 py-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-md transition duration-150"
+                >
+                    {t({ en: 'Learn Now', bm: 'Mulai Belajar' })}
+                </button>
+            </div>
+        </div>
+    );
+}

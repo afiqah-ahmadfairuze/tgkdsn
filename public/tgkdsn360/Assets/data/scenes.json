@@ -1,0 +1,374 @@
+{
+  "scenes": [
+    {
+      "id": "scene1",
+      "image": "Assets/images/scene1.jpg",
+      "hotspots": [
+                {
+          "id": "scene1-hotspot-1767105378835",
+          "target": "scene2",
+          "position": "2.81 0.56 0.17",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene2",
+      "image": "Assets/images/scene2.jpg",
+      "hotspots": [
+                {
+          "id": "scene2-hotspot-1767105480334",
+          "target": "scene3",
+          "position": "2.40 -0.16 0.37",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene2-hotspot-1767105494082",
+          "target": "scene1",
+          "position": "-1.39 -1.03 -0.37",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene3",
+      "image": "Assets/images/scene3.jpg",
+      "hotspots": [
+                {
+          "id": "scene3-hotspot-1767105605597",
+          "target": "scene4",
+          "position": "2.79 0.55 -0.30",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene3-hotspot-1767105614865",
+          "target": "scene2",
+          "position": "-0.40 0.23 -2.64",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene3-hotspot-1767105625026",
+          "target": "scene7",
+          "position": "-2.42 -0.16 0.19",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene4",
+      "image": "Assets/images/scene4.jpg",
+      "hotspots": [
+                {
+          "id": "scene4-hotspot-1767105848223",
+          "target": "scene3",
+          "position": "2.82 0.63 -0.30",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene4-hotspot-1767105859940",
+          "target": "scene5",
+          "position": "-0.20 0.44 -2.76",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene4-hotspot-1767105869941",
+          "target": "scene6",
+          "position": "0.19 0.57 2.81",
+          "rotation": "-90 180 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene5",
+      "image": "Assets/images/scene5.jpg",
+      "hotspots": [
+        {
+          "id": "scene5-hotspot-1767105970773",
+          "target": "scene4",
+          "position": "-0.38 0.49 2.76",
+          "rotation": "-90 180 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene6",
+      "image": "Assets/images/scene6.jpg",
+      "hotspots": [
+        {
+          "id": "scene6-hotspot-1767106036441",
+          "target": "scene4",
+          "position": "1.98 0.38 1.90",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene7",
+      "image": "Assets/images/scene7.jpg",
+      "hotspots": [
+        {
+          "id": "scene7-hotspot-1767106192626",
+          "target": "scene3",
+          "position": "-2.41 -0.19 0.03",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene7-hotspot-1767106336174",
+          "target": "scene8",
+          "position": "0.11 0.23 -2.66",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene7-hotspot-1767106347924",
+          "target": "scene10",
+          "position": "2.49 0.25 0.98",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene8",
+      "image": "Assets/images/scene8.jpg",
+      "hotspots": [
+                {
+          "id": "scene8-hotspot-1767106456809",
+          "target": "scene7",
+          "position": "1.57 0.42 2.26",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene8-hotspot-1767106469225",
+          "target": "scene9",
+          "position": "-1.82 -0.20 -1.57",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene9",
+      "image": "Assets/images/scene9.jpg",
+      "hotspots": [
+        {
+          "id": "scene9-hotspot-1767106574359",
+          "target": "scene8",
+          "position": "-2.71 0.33 0.23",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene9-hotspot-1767106582032",
+          "target": "scene11",
+          "position": "-0.11 0.31 2.70",
+          "rotation": "-90 180 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene10",
+      "image": "Assets/images/scene10.jpg",
+      "hotspots": [
+        {
+          "id": "scene10-hotspot-1767106877585",
+          "target": "scene7",
+          "position": "-2.72 0.60 -0.77",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene10-hotspot-1767106896468",
+          "target": "scene11",
+          "position": "0.55 0.44 -2.71",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene10-hotspot-1767106906435",
+          "target": "scene12",
+          "position": "-0.35 0.74 2.85",
+          "rotation": "-90 180 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene11",
+      "image": "Assets/images/scene11.jpg",
+      "hotspots": [
+        {
+          "id": "scene11-hotspot-1767107006718",
+          "target": "scene10",
+          "position": "-2.65 0.21 0.22",
+          "rotation": "-90 90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene11-hotspot-1767107014919",
+          "target": "scene9",
+          "position": "2.56 0.66 -1.24",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene12",
+      "image": "Assets/images/scene12.jpg",
+      "hotspots": [
+        {
+          "id": "scene12-hotspot-1767107186318",
+          "target": "scene10",
+          "position": "2.68 0.63 0.95",
+          "rotation": "-90 -90 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        },
+        {
+          "id": "scene12-hotspot-1767107193269",
+          "target": "scene13",
+          "position": "1.90 0.96 -2.23",
+          "rotation": "-90 0 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene13",
+      "image": "Assets/images/scene13.jpg",
+      "hotspots": [
+        {
+          "id": "scene13-hotspot-1767107270937",
+          "target": "scene12",
+          "position": "-1.79 -0.69 0.77",
+          "rotation": "-90 180 0",
+          "navImage": {
+            "src": "nav360",
+            "width": 1.8,
+            "height": 1.8
+          }
+        }
+      ]
+    }
+  ],
+  "additionalAssets": [
+    {
+      "id": "nav360",
+      "src": "Assets/images/nav360.png"
+    }
+  ]
+}

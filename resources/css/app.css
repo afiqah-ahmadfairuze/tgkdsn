@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* H1 Titles - Poppins 700 Bold */
+h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+/* Section Headers - Poppins 600 SemiBold */
+h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Body Text - Poppins 400 Regular */
+p, body {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+}
+
+/* Buttons - Poppins 600 SemiBold */
+button {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Form Labels and Small Text - Poppins 300-400 */
+label, small, .text-sm {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+}
